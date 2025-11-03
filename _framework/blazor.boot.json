@@ -1,7 +1,7 @@
 {
   "mainAssemblyName": "SpawnDev.BlazorJS.Rally.Demo",
   "resources": {
-    "hash": "sha256-YCfiCZ9O5qWTnt6UUFIzMYEJ7F/HzatnWlHrje2p0+0=",
+    "hash": "sha256-dcps8fxp4BZvUFFzM0r+oOUW6MfBNQ+Kg+lrCco0uQI=",
     "jsModuleNative": {
       "dotnet.native.js": "sha256-L++FEwWK4X2gKqOLBoEsevNFPkCeZ5i6OXKp2DufDjk="
     },
@@ -67,8 +67,8 @@
       "System.Web.HttpUtility.wasm": "sha256-tleXqRu3PskvBSbXgj1TRvFQXzrU44c8N0xHnAyoDnY=",
       "System.wasm": "sha256-PUc71Jd5nvz5F65sAd0C3ZORcUzYK2JSfSDmE+Drn0Q=",
       "System.Private.CoreLib.wasm": "sha256-stFMC19BSd8U4xdmFVISUIczQxKHTfQtHRdQUZCijdI=",
-      "SpawnDev.BlazorJS.Rally.wasm": "sha256-iQ+7zl2NamWbaubuusB5YL3FXm7BOOypAqZjVhPAjHU=",
-      "SpawnDev.BlazorJS.Rally.Demo.wasm": "sha256-bQ52jHFgfSYV+6J3BonU3v2hvR8EqxQPLgP5UAl/UdY="
+      "SpawnDev.BlazorJS.Rally.wasm": "sha256-Q9MaszZEQsmzAvXowq3WZZ67swqDkL0rt72R5yKbgnA=",
+      "SpawnDev.BlazorJS.Rally.Demo.wasm": "sha256-dgJdDpKalCcAFz0iQ35tZG2i9qGQI+ChjC6bkNR+kos="
     },
     "libraryInitializers": {
       "SpawnDev.BlazorJS.lib.module.js": "sha256-MSEFzzIHfyaslxH4GvsWrzxOUHz5n4SKxG0AiWpiYV0="
