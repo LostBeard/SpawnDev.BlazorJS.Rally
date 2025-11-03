@@ -1,10 +1,22 @@
 ﻿@inherits LayoutComponentBase
 <div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
-
-    <main style="position: relative;">
-        @Body
-    </main>
+    @Body
 </div>
+
+@code{
+    [Inject]
+    RallyService RallyService { get; set; } = default!;
+
+    [Inject]
+    NavigationManager NavigationManager { get; set; } = default!;
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // join test rally point. here e are using the apps base location so all users of this app on the same site will connect
+            var rallyPointName = NavigationManager.BaseUri;
+            RallyService.RallyPointConnect(rallyPointName);
+        }
+    }
+}
