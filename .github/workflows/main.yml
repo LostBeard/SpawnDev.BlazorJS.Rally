@@ -24,8 +24,8 @@ jobs:
       run: dotnet workload install wasm-tools wasm-tools-net8        
 
     # publishes Blazor project to the publish-folder
-    - name: Publish .NET Core Project
-      run: dotnet publish ./SpawnDev.BlazorJS.Rally.Demo/ --nologo -c:Release --output publish
+    - name: Publish .NET Core Project (run compat build script)
+      run: cd SpawnDev.BlazorJS.Rally.Demo && ./publish.sh; cd ..
 
     # changes the base-tag in index.html from '/' to '/SpawnDev.BlazorJS.Rally/' to match GitHub Pages repository subdirectory
     - name: Change base-tag in index.html from / to /SpawnDev.BlazorJS.Rally/
