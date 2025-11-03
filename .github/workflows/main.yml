@@ -1,3 +1,24 @@
+Skip to content
+Navigation Menu
+LostBeard
+SpawnDev.BlazorJS.Rally
+
+Type / to search
+Code
+Issues
+Pull requests
+Actions
+Projects
+Wiki
+Security
+Insights
+Settings
+Deploy to GitHub Pages
+Deploy to GitHub Pages #4
+Jobs
+Run details
+Workflow file for this run
+.github/workflows/main.yml at 90510fd
 name: Deploy to GitHub Pages
 
 # Run workflow on every push to the master branch
@@ -25,22 +46,22 @@ jobs:
 
     # publishes Blazor project to the publish-folder
     - name: Publish .NET Core Project (run compat build script)
-      run: cd SpawnDev.BlazorJS.Rally.Demo && chmod +x publish.sh && ./publish.sh && cd ..
+      run: cd SpawnDev.BlazorJS.Rally.Demo && chmod +x publish.sh && ./publish.sh
 
     # changes the base-tag in index.html from '/' to '/SpawnDev.BlazorJS.Rally/' to match GitHub Pages repository subdirectory
     - name: Change base-tag in index.html from / to /SpawnDev.BlazorJS.Rally/
-      run: sed -i 's/<base href="\/"/<base href="\/SpawnDev.BlazorJS.Rally\/"/g' publish/wwwroot/index.html
+      run: sed -i 's/<base href="\/"/<base href="\/SpawnDev.BlazorJS.Rally\/"/g' bin/Publish/wwwroot/index.html
     
     # copy index.html to 404.html to serve the same file when a file is not found
     - name: copy index.html to 404.html
-      run: cp publish/wwwroot/index.html publish/wwwroot/404.html
+      run: cp bin/Publish/wwwroot/index.html bin/Publish/wwwroot/404.html
 
     # add .nojekyll file to tell GitHub pages to not treat this as a Jekyll project. (Allow files and folders starting with an underscore)
     - name: Add .nojekyll file
-      run: touch publish/wwwroot/.nojekyll      
+      run: touch bin/Publish/wwwroot/.nojekyll      
       
     - name: Commit wwwroot to GitHub Pages
       uses: JamesIves/github-pages-deploy-action@v4.4.1
       with:
         branch: gh-pages
-        folder: publish/wwwroot    
+        folder: bin/Publish/wwwroot   
