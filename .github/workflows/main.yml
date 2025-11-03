@@ -21,7 +21,7 @@ jobs:
 
     # Install dotnet wasm buildtools workload
     - name: Install .NET WASM Build Tools
-      run: dotnet workload install wasm-tools wasm-tools-net8        
+      run: dotnet workload install wasm-tools-net8        
 
     # publishes Blazor project to the publish-folder
     - name: Publish .NET Core Project (run compat build script)
@@ -29,18 +29,18 @@ jobs:
 
     # changes the base-tag in index.html from '/' to '/SpawnDev.BlazorJS.Rally/' to match GitHub Pages repository subdirectory
     - name: Change base-tag in index.html from / to /SpawnDev.BlazorJS.Rally/
-      run: sed -i 's/<base href="\/"/<base href="\/SpawnDev.BlazorJS.Rally\/"/g' bin/Publish/wwwroot/index.html
+      run: sed -i 's/<base href="\/"/<base href="\/SpawnDev.BlazorJS.Rally\/"/g' SpawnDev.BlazorJS.Rally.Demo/bin/Publish/wwwroot/index.html
     
     # copy index.html to 404.html to serve the same file when a file is not found
     - name: copy index.html to 404.html
-      run: cp bin/Publish/wwwroot/index.html bin/Publish/wwwroot/404.html
+      run: cp SpawnDev.BlazorJS.Rally.Demo/bin/Publish/wwwroot/index.html SpawnDev.BlazorJS.Rally.Demo/bin/Publish/wwwroot/404.html
 
     # add .nojekyll file to tell GitHub pages to not treat this as a Jekyll project. (Allow files and folders starting with an underscore)
     - name: Add .nojekyll file
-      run: touch bin/Publish/wwwroot/.nojekyll      
+      run: touch SpawnDev.BlazorJS.Rally.Demo/bin/Publish/wwwroot/.nojekyll      
       
     - name: Commit wwwroot to GitHub Pages
       uses: JamesIves/github-pages-deploy-action@v4.4.1
       with:
         branch: gh-pages
-        folder: bin/Publish/wwwroot   
+        folder: SpawnDev.BlazorJS.Rally.Demo/bin/Publish/wwwroot   
