@@ -1,24 +1,3 @@
-Skip to content
-Navigation Menu
-LostBeard
-SpawnDev.BlazorJS.Rally
-
-Type / to search
-Code
-Issues
-Pull requests
-Actions
-Projects
-Wiki
-Security
-Insights
-Settings
-Deploy to GitHub Pages
-Deploy to GitHub Pages #4
-Jobs
-Run details
-Workflow file for this run
-.github/workflows/main.yml at 90510fd
 name: Deploy to GitHub Pages
 
 # Run workflow on every push to the master branch
