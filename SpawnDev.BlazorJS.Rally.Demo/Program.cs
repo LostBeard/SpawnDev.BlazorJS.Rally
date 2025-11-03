@@ -14,12 +14,15 @@ builder.Services.AddRallySingleton(RallyService =>
     // Add signalers
     RallyService.SignalerUrls.AddRange(new string[]
     {
-            //"wss://tracker.ghostchu-services.top:443/announce",
-            //"wss://tracker.files.fm:7073/announce",
-            //"wss://tracker.webtorrent.dev",
-            //"wss://tracker.btorrent.xyz",
-            //"wss://tracker.openwebtorrent.com",
-            "ws://localhost:6565",
+#if DEBUG && false
+        "ws://localhost:6565",
+#else
+        "wss://tracker.ghostchu-services.top:443/announce",
+        "wss://tracker.files.fm:7073/announce",
+        "wss://tracker.webtorrent.dev",
+        "wss://tracker.btorrent.xyz",
+        "wss://tracker.openwebtorrent.com",
+#endif
     });
     RallyService.RTCConfiguration = new RTCConfiguration
     {
