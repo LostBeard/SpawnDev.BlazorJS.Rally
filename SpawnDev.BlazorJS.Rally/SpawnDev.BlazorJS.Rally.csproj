@@ -12,13 +12,13 @@
 		<Title>SpawnDev.BlazorJS.Rally</Title>
 		<Authors>LostBeard</Authors>
 		<Description>SpawnDev.BlazorJS.Rally lets Blazor WebAssembly apps easily join peer to peer swarms, referred to as a RallyPoints. </Description>
-		<PackageProjectUrl>https://github.com/LostBeard/SpawnDev.BlazorJS.SimplePeer</PackageProjectUrl>
+		<PackageProjectUrl>https://github.com/LostBeard/SpawnDev.BlazorJS.Rally</PackageProjectUrl>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 		<PackageIcon>icon-128.png</PackageIcon>
-		<RepositoryUrl>https://github.com/LostBeard/SpawnDev.BlazorJS.SimplePeer.git</RepositoryUrl>
+		<RepositoryUrl>https://github.com/LostBeard/SpawnDev.BlazorJS.Rally.git</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
-		<PackageTags>Blazor;BlazorWebAssembly;SimplePeer;WebRTC</PackageTags>
+		<PackageTags>Blazor;BlazorWebAssembly;Rally;WebRTC</PackageTags>
 	</PropertyGroup>
 
 	<ItemGroup>
