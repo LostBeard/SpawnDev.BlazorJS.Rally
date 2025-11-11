@@ -51,5 +51,5 @@ var host = await builder.Build().StartBackgroundServices();
 #if DEBUG
 
 #endif
-// Run app using BlazorJSRunAsync extension method
+// Run app using BlazorJSRunAsync
 await host.BlazorJSRunAsync();

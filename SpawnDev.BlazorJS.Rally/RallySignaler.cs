@@ -3,6 +3,7 @@ using SpawnDev.BlazorJS.JSObjects.WebRTC;
 using SpawnDev.BlazorJS.Rally.Signals;
 using SpawnDev.BlazorJS.SimplePeer;
 using SpawnDev.BlazorJS.WebWorkers;
+using SpawnDev.Identification;
 using System;
 using System.Text.Json;
 using Timer = System.Timers.Timer;
@@ -573,7 +574,7 @@ namespace SpawnDev.BlazorJS.Rally
             }
             return false;
         }
-        static JsonSerializerOptions JsonSerializerOptionsWeb { get; } = new JsonSerializerOptions(JsonSerializerDefaults.Web) { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
+        static JsonSerializerOptions JsonSerializerOptionsWeb { get; } = new JsonSerializerOptions(JsonSerializerDefaults.Web) { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping, PropertyNameCaseInsensitive = true };
         Dictionary<string, RallyPoint> _RallyPoints { get; } = new Dictionary<string, RallyPoint>();
         /// <summary>
         /// List of RallyPoints

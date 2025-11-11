@@ -6,24 +6,6 @@
     public static class CharStringExtensions
     {
         /// <summary>
-        /// Creates a simple checksum by folding the input byte array into a smaller byte array of the specified length.
-        /// </summary>
-        /// <param name="hash"></param>
-        /// <param name="length"></param>
-        /// <returns></returns>
-        public static byte[] SimpleCrc(this byte[] hash, int length = 8)
-        {
-            if (hash.Length < length) return hash;
-            var hashLength = hash.Length;
-            var ret = new byte[length];
-            for (var i = 0; i < hashLength; i++)
-            {
-                var n = i % length;
-                ret[n] = (byte)(hash[i] + ret[n]);
-            }
-            return ret;
-        }
-        /// <summary>
         /// Converts a byte array to a hex string
         /// </summary>
         /// <param name="data"></param>

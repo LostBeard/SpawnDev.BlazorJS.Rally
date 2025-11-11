@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using SpawnDev.Identification;
 
 namespace SpawnDev.BlazorJS.Rally
 {
@@ -16,7 +17,8 @@ namespace SpawnDev.BlazorJS.Rally
         /// <returns></returns>
         public static IServiceCollection AddRallySingleton(this IServiceCollection _this, Action<RallyService>? configureCallback = null)
         {
-            _this.TryAddSingleton<DeviceIdentityService>();
+            _this.AddBlazorJSRuntime();
+            _this.AddDeviceIdentityService();
             _this.TryAddSingleton<RallyService>(sp =>
             {
                 var RallyService = ActivatorUtilities.CreateInstance<RallyService>(sp);
@@ -33,7 +35,7 @@ namespace SpawnDev.BlazorJS.Rally
         /// <returns></returns>
         public static IServiceCollection AddRallyScoped(this IServiceCollection _this, Action<RallyService>? configureCallback = null)
         {
-            _this.TryAddScoped<DeviceIdentityService>();
+            _this.AddDeviceIdentityService();
             _this.TryAddScoped<RallyService>(sp =>
             {
                 var RallyService = ActivatorUtilities.CreateInstance<RallyService>(sp);

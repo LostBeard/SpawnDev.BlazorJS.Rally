@@ -6,6 +6,7 @@ using SpawnDev.BlazorJS.Rally.Signals;
 using SpawnDev.BlazorJS.SimplePeer;
 using SpawnDev.BlazorJS.Toolbox;
 using SpawnDev.BlazorJS.WebWorkers;
+using SpawnDev.Identification;
 using System.Security.Claims;
 using Array = SpawnDev.BlazorJS.JSObjects.Array;
 
