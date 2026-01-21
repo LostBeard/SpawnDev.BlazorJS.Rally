@@ -7,23 +7,10 @@ using SpawnDev.BlazorJS.SimplePeer;
 using SpawnDev.BlazorJS.Toolbox;
 using SpawnDev.BlazorJS.WebWorkers;
 using SpawnDev.Identification;
-using System.Security.Claims;
 using Array = SpawnDev.BlazorJS.JSObjects.Array;
 
 namespace SpawnDev.BlazorJS.Rally
 {
-    public enum RemoteConnectionInfosUpdateType
-    {
-        Full,
-        Added,
-        Removed,
-    }
-    public class ConnectionInfo
-    {
-        public string PeerId { get; init; }
-        public string SignerKeyHex { get; init; }
-        public string SignalerUrl { get; init; }
-    }
     /// <summary>
     /// Client and server implementation for remotely calling .Net methods using SimplePeer
     /// </summary>
@@ -247,10 +234,12 @@ namespace SpawnDev.BlazorJS.Rally
             }
             RallyPoint.OnPeerConnect -= RallyPoint_OnPeerConnect;
             RallyPoint.OnPeerClose -= RallyPoint_OnPeerClose;
+            RallyPoint.OnSignalerConnect -= RallyPoint_OnSignalerConnect;
+            RallyPoint.OnSignalerDisconnect -= RallyPoint_OnSignalerDisconnect;
             base.Dispose();
         }
         [RemoteCallable]
-        protected async Task HandleRemoteConnectionInfosUpdate(ConnectionInfo[] connectionInfos, RemoteConnectionInfosUpdateType updateType, [FromLocal] RallyPeer rallyPeer)
+        protected async Task HandleRemoteConnectionInfosUpdate(ConnectionInfo[] connectionInfos, UpdateType updateType, [FromLocal] RallyPeer rallyPeer)
         {
             try
             {
@@ -258,7 +247,7 @@ namespace SpawnDev.BlazorJS.Rally
                 JS.Log("updateType", updateType.ToString());
                 switch (updateType)
                 {
-                    case RemoteConnectionInfosUpdateType.Full:
+                    case UpdateType.Full:
                         _ConnectionInfos.Clear();
                         foreach (var connInfo in connectionInfos)
                         {
@@ -266,7 +255,7 @@ namespace SpawnDev.BlazorJS.Rally
                         }
                         fireEvent = true;
                         break;
-                    case RemoteConnectionInfosUpdateType.Removed:
+                    case UpdateType.Removed:
                         foreach (var connInfo in connectionInfos)
                         {
                             if (_ConnectionInfos.ContainsKey(connInfo.PeerId))
@@ -276,7 +265,7 @@ namespace SpawnDev.BlazorJS.Rally
                             }
                         }
                         break;
-                    case RemoteConnectionInfosUpdateType.Added:
+                    case UpdateType.Added:
                         foreach (var connInfo in connectionInfos)
                         {
                             if (_ConnectionInfos.TryGetValue(connInfo.PeerId, out var existingInfo))
@@ -305,7 +294,7 @@ namespace SpawnDev.BlazorJS.Rally
         }
         Dictionary<string, ConnectionInfo> _ConnectionInfos = new Dictionary<string, ConnectionInfo>();
         /// <summary>
-        /// 
+        /// Remote peers connections
         /// </summary>
         public List<ConnectionInfo> ConnectionInfos => _ConnectionInfos.Values.ToList();
         /// <summary>
@@ -352,7 +341,20 @@ namespace SpawnDev.BlazorJS.Rally
 
             RallyPoint.OnPeerConnect += RallyPoint_OnPeerConnect;
             RallyPoint.OnPeerClose += RallyPoint_OnPeerClose;
+            RallyPoint.OnSignalerConnect += RallyPoint_OnSignalerConnect;
+            RallyPoint.OnSignalerDisconnect += RallyPoint_OnSignalerDisconnect;
         }
+
+        private void RallyPoint_OnSignalerDisconnect(RallyPoint rallyPoint, RallySignaler signaler)
+        {
+            _ = UpdateRemoteConnectionListRemoved(signaler);
+        }
+
+        private void RallyPoint_OnSignalerConnect(RallyPoint rallyPoint, RallySignaler signaler)
+        {
+            _ = UpdateRemoteConnectionListAdded(signaler);
+        }
+
         private void Send(object?[] args)
         {
             if (Connection == null || Connection.IsWrapperDisposed || Connection.Destroyed)
@@ -426,15 +428,10 @@ namespace SpawnDev.BlazorJS.Rally
         }
         async Task UpdateRemoteConnectionListFull()
         {
-            var connectionInfos = RallyPoint.ConnectedPeers.Where(o => o != this && o.SignalerUrl == SignalerUrl).Select(o => new ConnectionInfo
-            {
-                PeerId = o.RemotePeerId,
-                SignerKeyHex = o.RemoteSignerKeyHex,
-                SignalerUrl = SignalerUrl,
-            }).ToArray();
+            var connectionInfos = RallyPoint.GetConnectionInfos();
             try
             {
-                await Run(() => HandleRemoteConnectionInfosUpdate(connectionInfos, RemoteConnectionInfosUpdateType.Full, null!));
+                await Run(() => HandleRemoteConnectionInfosUpdate(connectionInfos, UpdateType.Full, null!));
             }
             catch (Exception ex)
             {
@@ -446,7 +443,7 @@ namespace SpawnDev.BlazorJS.Rally
             if (removed == null || !removed.Any()) return;
             try
             {
-                await Run(() => HandleRemoteConnectionInfosUpdate(removed, RemoteConnectionInfosUpdateType.Removed, null!));
+                await Run(() => HandleRemoteConnectionInfosUpdate(removed, UpdateType.Removed, null!));
             }
             catch { }
         }
@@ -455,7 +452,7 @@ namespace SpawnDev.BlazorJS.Rally
             if (added == null || !added.Any()) return;
             try
             {
-                await Run(() => HandleRemoteConnectionInfosUpdate(added, RemoteConnectionInfosUpdateType.Added, null!));
+                await Run(() => HandleRemoteConnectionInfosUpdate(added, UpdateType.Added, null!));
             }
             catch { }
         }
@@ -464,7 +461,7 @@ namespace SpawnDev.BlazorJS.Rally
             if (Connected)
             {
                 if (peer == this) return;
-                _ = UpdateRemoteConnectionListRemoved(new ConnectionInfo { PeerId = peer.RemotePeerId, SignerKeyHex = peer.RemoteSignerKeyHex, SignalerUrl = SignalerUrl });
+                _ = UpdateRemoteConnectionListRemoved(peer);
             }
         }
         private void RallyPoint_OnPeerConnect(RallyPoint rallyPoint, RallyPeer peer)
@@ -472,7 +469,7 @@ namespace SpawnDev.BlazorJS.Rally
             if (Connected)
             {
                 if (peer == this) return;
-                _ = UpdateRemoteConnectionListAdded(new ConnectionInfo { PeerId = peer.RemotePeerId, SignerKeyHex = peer.RemoteSignerKeyHex, SignalerUrl = SignalerUrl });
+                _ = UpdateRemoteConnectionListAdded(peer);
             }
         }
         private void SimplePeer_OnError(NodeError nodeError)

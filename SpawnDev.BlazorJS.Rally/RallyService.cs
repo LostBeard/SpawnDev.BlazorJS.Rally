@@ -160,6 +160,14 @@ namespace SpawnDev.BlazorJS.Rally
         /// Fires when a peer closes
         /// </summary>
         public event Action<RallyPeer>? OnPeerClose = default!;
+        /// <summary>
+        /// Fires when a signaler connects
+        /// </summary>
+        public event Action<RallySignaler>? OnSignalerConnect = default!;
+        /// <summary>
+        /// Fires when a signaler disconnects
+        /// </summary>
+        public event Action<RallySignaler>? OnSignalerDisconnect = default!;
         string InfoHashAny(string input)
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
@@ -243,9 +251,19 @@ namespace SpawnDev.BlazorJS.Rally
                 signaler.OnPeerFilter += Signaler_OnPeerFilter;
                 signaler.OnPeerConnect += Signaler_OnPeerConnect;
                 signaler.OnPeerClose += Signaler_OnPeerClose;
+                signaler.OnConnected += Signaler_OnConnected;
+                signaler.OnDisconnected += Signaler_OnDisconnected;
                 _Signalers.Add(signalerUrl, signaler);
             }
             return signaler;
+        }
+        private void Signaler_OnDisconnected(RallySignaler rallySignaler)
+        {
+            OnSignalerConnect?.Invoke(rallySignaler);
+        }
+        private void Signaler_OnConnected(RallySignaler rallySignaler)
+        {
+            OnSignalerConnect?.Invoke(rallySignaler);
         }
         /// <summary>
         /// Gets the RallyPoint for the given info hash

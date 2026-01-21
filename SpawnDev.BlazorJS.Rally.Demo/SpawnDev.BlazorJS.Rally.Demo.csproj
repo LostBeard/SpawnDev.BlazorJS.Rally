@@ -10,8 +10,9 @@
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.21" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.21" PrivateAssets="all" />
-		<PackageReference Include="SpawnDev.BlazorJS" Version="2.41.0" />
-		<PackageReference Include="SpawnDev.BlazorJS.VisNetwork" Version="1.7.0" />
+		<PackageReference Include="SpawnDev.BlazorJS" Version="2.60.0" />
+		<PackageReference Include="SpawnDev.BlazorJS.VisNetwork" Version="1.8.2" />
+		<PackageReference Include="Radzen.Blazor" Version="8.3.2" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -353,7 +353,7 @@ namespace SpawnDev.BlazorJS.Rally
                             var interval = jsonData.Interval.Value;
                             if (interval > 0)
                             {
-                                var intervalClamped = Math.Clamp(interval, 15, 120);
+                                var intervalClamped = Math.Clamp(interval, rallyPoint?.MinUpdateDelay ?? 15, 120);
                                 if (UpdateIntervalSeconds != intervalClamped)
                                 {
                                     JS.Log($"Changing interval: {intervalClamped} ({interval}) {Url}");
@@ -680,6 +680,11 @@ namespace SpawnDev.BlazorJS.Rally
             // check if they know about any peers we might want to connect to
             foreach (var info in peer.ConnectionInfos)
             {
+                if (info.Type != "peer")
+                {
+                    // could be signaler ... we don't currently connect to reported signalers
+                    continue;
+                }
                 // check for existing peer on this rally point with this peer (does not have to be on this signaler!)
                 if (info.PeerId == PeerId)
                 {
@@ -709,7 +714,7 @@ namespace SpawnDev.BlazorJS.Rally
         public bool ConnectToPeersOnConnect { get; set; } = true;
         async Task SendUpdateEvent(RallyPoint rallyPoint)
         {
-            var numWant = rallyPoint.NumWantNow;
+            var numWant = rallyPoint.SendOffersOnUpdate ? rallyPoint.NumWantNow : 0;
             var query = new AnnounceQueryUpdate
             {
                 PeerId = PeerId,

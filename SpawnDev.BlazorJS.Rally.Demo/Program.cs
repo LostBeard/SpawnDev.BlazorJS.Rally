@@ -1,9 +1,13 @@
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Radzen;
 using SpawnDev.BlazorJS;
 using SpawnDev.BlazorJS.JSObjects.WebRTC;
 using SpawnDev.BlazorJS.Rally;
 using SpawnDev.BlazorJS.Rally.Demo;
+using SpawnDev.BlazorJS.Rally.Demo.Layout;
+using SpawnDev.BlazorJS.Rally.Demo.Layout.AppTray;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 // Add SpawnDev.BlazorJS interop
@@ -18,10 +22,10 @@ builder.Services.AddRallySingleton(RallyService =>
         "ws://localhost:6565",
 #else
         "wss://tracker.files.fm:7073/announce",
-        //"wss://tracker.webtorrent.dev",
-        //"wss://tracker.ghostchu-services.top:443/announce",
+        "wss://tracker.webtorrent.dev",
+        "wss://tracker.ghostchu-services.top:443/announce",
+        "wss://tracker.openwebtorrent.com",
         //"wss://tracker.btorrent.xyz",
-        //"wss://tracker.openwebtorrent.com",
 #endif
     });
     RallyService.RTCConfiguration = new RTCConfiguration
@@ -40,6 +44,12 @@ builder.Services.AddRallySingleton(RallyService =>
     };
 });
 
+//  MainLayout services (tray icon, theme tray icon, Radzen)
+builder.Services.AddRadzenComponents();
+builder.Services.AddScoped<AppTrayService>();
+builder.Services.AddScoped<MainLayoutService>();
+builder.Services.AddScoped<ThemeTrayIconService>();
+
 // Add dom objects if running in a window
 if (JS.IsWindow)
 {
@@ -48,8 +58,17 @@ if (JS.IsWindow)
 }
 // Start
 var host = await builder.Build().StartBackgroundServices();
-#if DEBUG
 
+#if true
+if (JS.IsWindow)
+{
+    // join test rally point. here we are using the apps base location so all users of this app on the same site will connect
+    var RallyService = host.Services.GetRequiredService<RallyService>();
+    var NavigationManager = host.Services.GetRequiredService<NavigationManager>();
+    var rallyPointName = NavigationManager.BaseUri;
+    RallyService.RallyPointConnect(rallyPointName);
+}
 #endif
+
 // Run app using BlazorJSRunAsync
 await host.BlazorJSRunAsync();

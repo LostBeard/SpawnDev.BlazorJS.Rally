@@ -7,7 +7,7 @@ namespace SpawnDev.BlazorJS.Rally
     /// <summary>
     /// Adds extension methods to IServiceCollection
     /// </summary>
-    public static class IServiceCollectionExtension
+    public static class Extensions
     {
         /// <summary>
         /// Adds DeviceIdentityService and RallyService

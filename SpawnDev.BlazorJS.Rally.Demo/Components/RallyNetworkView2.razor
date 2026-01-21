@@ -1,13 +1,9 @@
-﻿@using SpawnDev.BlazorJS.JSObjects
-@using SpawnDev.BlazorJS.Rally
+﻿@using SpawnDev.BlazorJS.Rally
 @using SpawnDev.BlazorJS.VisNetwork
-@using SpawnDev.BlazorJS.WebWorkers
 @using SpawnDev.Identification
-@using System.Text.RegularExpressions
-@using System.Text
 @implements IDisposable
 
-<VisNetworkView Options="@NetworkOptions" @ref=_netVis Style="top: 0; left: 0; width: 100%; height: 100%; background-color: #101010; position: absolute;" UpdateData=UpdateData OnDoubleClick="Network_OnDoubleClick" OnClick="Network_OnClick" OnContext="Network_OnContext" />
+<VisNetworkView @ref=_netVis Style="top: 0; left: 0; width: 100%; height: 100%; background-color: #101010; position: absolute;" UpdateData=UpdateData OnDoubleClick="Network_OnDoubleClick" OnClick="Network_OnClick" OnContext="Network_OnContext" />
 
 @code {
     void Network_OnContext(NetworkContextEvent networkContextEvent)
@@ -20,77 +16,7 @@
         JS.Log("_eventNodeId", eventNodeId);
         JS.Log("_selectedNodeId", selectedNodeId);
         JS.Log("_selectedEdgeId", selectedEdgeId);
-        var menuItems = new List<ContextMenuItem>();
 
-        var eventParts = eventNodeId!.Split('.', 2);
-        var eventRallyPointInfoHash = eventParts[0];
-        var eventRemotePeerId = eventParts.Length > 1 ? eventParts[1] : null;
-
-        var selectedParts = selectedNodeId?.Split('.', 2);
-        var selectedRallyPointInfoHash = selectedParts == null ? null : selectedParts[0];
-        var selectedRemotePeerId = selectedParts?.Length > 1 ? selectedParts[1] : null;
-
-
-        var eventRallyPoint = RallyService.GetRallyPoint(eventRallyPointInfoHash);
-        var eventRemotePeer = eventRallyPoint == null || string.IsNullOrEmpty(eventRemotePeerId) ? null : eventRallyPoint.ConnectedPeers.FirstOrDefault(o => o.RemotePeerId == eventRemotePeerId);
-
-        var selectedRallyPoint = RallyService.GetRallyPoint(selectedRallyPointInfoHash);
-        var selectedRemotePeer = selectedRallyPoint == null || string.IsNullOrEmpty(selectedRemotePeerId) ? null : selectedRallyPoint.ConnectedPeers.FirstOrDefault(o => o.RemotePeerId == selectedRemotePeerId);
-
-        JS.Log("rallyPointInfoHash", eventRallyPointInfoHash);
-        JS.Log("remotePeerId", eventRemotePeerId);
-
-        if (eventRemotePeer != null)
-        {
-            var isAdmin = eventRemotePeer.User.IsInRole("admin");
-            if (isAdmin)
-            {
-                menuItems.Add(new ContextMenuItem
-                {
-                    Text = "Revoke Admin",
-                    Value = async () =>
-                    {
-                        JS.Log("Revoke Admin", eventRemotePeerId);
-                    }
-                });
-            }
-            else
-            {
-                menuItems.Add(new ContextMenuItem
-                {
-                    Text = "Give Admin",
-                    Value = async () =>
-                    {
-                        JS.Log("Give Admin", eventRemotePeerId);
-                    }
-                });
-            }
-            menuItems.Add(new ContextMenuItem
-            {
-                Text = "Hello Peer",
-                Value = async () =>
-                {
-                    await eventRemotePeer.Run(() => HelloPeer("woohoo!!!!!!!!!!!!!", null!));
-                }
-            });
-        }
-        var mouseEvent = networkContextEvent.EventAs<MouseEvent>();
-        var mouseArgs = new MouseEventArgs
-        {
-            ClientX = mouseEvent.ClientX,
-            ClientY = mouseEvent.ClientY,
-        };
-        ContextMenuService.Open(mouseArgs, menuItems, async (v) =>
-        {
-            ContextMenuService.Close();
-            if (v.Value is System.Action action) action();
-            else if (v.Value is System.Func<Task> func) await func();
-        });
-    }
-    [RemoteCallable]
-    static async Task HelloPeer(string msg, [FromLocal] RallyPeer rallyPeer)
-    {
-        Console.WriteLine("HelloPeer called: " + msg + " from " + rallyPeer.RemotePeerId);
     }
     void Network_OnDoubleClick(NetworkEvent networkContextEvent)
     {
@@ -207,36 +133,12 @@
     }
 
     [Inject]
-    ContextMenuService ContextMenuService { get; set; } = default!;
-
-    [Inject]
     DeviceIdentityService DeviceIdentityService { get; set; } = default!;
-
     [Inject]
     BlazorJSRuntime JS { get; set; } = default!;
-
     [Inject]
     RallyService RallyService { get; set; } = default!;
-
     VisNetworkView? _netVis { get; set; }
-
-    NetworkOptions NetworkOptions = new NetworkOptions
-    {
-        Physics = new PhysicsOptions
-        {
-            Enabled = true,
-            Solver = "barnesHut",
-            BarnesHut = new BarnesHutPhysicsOptions
-            {
-                GravitationalConstant = -20000,
-                CentralGravity = 0.05,
-                SpringConstant = 0.04,
-                Damping = 0.09,
-                AvoidOverlap = 0.5,
-            }
-        }
-    };
-
     static VisFont defaultNodeFont = new VisFont { Color = "#ffffff", Background = "#111111aa" };
     static VisFont offlineNodeFont = new VisFont { Color = "#ffffff66", Background = "#111111aa" };
     static VisFont onlineNodeFont = new VisFont { Color = "#ffffff", Background = "#111111aa" };
@@ -309,224 +211,48 @@
             rootNode.Color!.Border = rootNodeColor;
             rootNode.BorderWidth = 4;
             _netVis.Nodes!.Update(rootNode);
-            foreach (var rallyPoint in RallyService.RallyPoints)
+            foreach (RallyPoint rallyPoint in RallyService.RallyPoints)
             {
-                // RallyPoint node
+                var (torrentNode, torrentToRootEdge) = AddOrUpdateNodeRallyPoint(rallyPoint);
+                nodeIds.Add(torrentNode.Id);
+                edgeIds.Add(torrentToRootEdge.Id!);
+                var wires = rallyPoint.ConnectingOrConnectedPeers;
+                foreach (RallyPeer wire in wires)
                 {
-                    var nodeId = $"{rallyPoint.InfoHash}";
-                    var node = _netVis!.Nodes!.Get(nodeId);
-                    var nodeLabel = $"RallyPoint: {rallyPoint.InfoHashSource}\n";
-                    var peerColor = GetColor(rallyPoint.InfoHash);
-                    if (node == null)
-                    {
-                        node = new VisNode
-                        {
-                            Id = nodeId,
-                            Label = nodeLabel,
-                            Shape = "circularImage",
-                            Image = rootNode.Image,
-                            Font = onlineNodeFont,
-                            Color = new VisNodeColor
-                            {
-                                Border = peerColor,
-                                Background = "#222222",
-                            },
-                            Opacity = 1.0f,
-                            Tag = "wire",
-                            BorderWidth = 4,
-                            Title = "Double click to disconnect the peer",
-                            Physics = true,
-                        };
-                    }
-                    else
-                    {
-                        node.Label = nodeLabel;
-                        node.Font = onlineNodeFont;
-                        node.Color!.Border = peerColor;
-                        node.Opacity = 1.0f;
-                        node.BorderWidth = 4;
-                    }
-                    _netVis!.Nodes.Update(node);
-                    nodeIds.Add(node.Id);
-
-                    {
-                        // wire to root
-                        var edgeToId = rootNode.Id;
-                        var edgeId = $"{nodeId}>>{edgeToId}";
-                        var edge = _netVis!.Edges!.Get(edgeId);
-                        var connected = true;// connInfo.Connected;
-                        var connecting = false;// connInfo.Connecting;
-                        var isInitiator = true;//connInfo.Initiator;
-                        var color = "";
-                        if (connected)
-                        {
-                            color = "#ffffff";
-                        }
-                        else if (connecting)
-                        {
-                            color = "#ffff00";
-                        }
-                        else
-                        {
-                            color = "#550000";
-                        }
-                        if (edge == null)
-                        {
-                            edge = new VisEdge
-                            {
-                                Length = 500,
-                                Id = edgeId,
-                                From = nodeId,
-                                To = edgeToId,
-                                Dashes = !connected,
-                                //Label = edgeLabel,
-                                Color = new VisEdgeColor
-                                {
-                                    Color = color,
-                                },
-                                Physics = true,
-                                // Background = new VisEdgeBackground
-                                // {
-                                //     Color = "#ff00ff",
-                                //     Enabled = true,
-                                //     Size = 10,
-                                // },
-                                Width = 2,
-                                Smooth = false,
-                                Arrows = new VisEdgeArrows
-                                {
-                                    From = new VisEdgeArrowOptions { Enabled = false, },
-                                    To = new VisEdgeArrowOptions { Enabled = isInitiator, },
-                                },
-                            };
-                        }
-                        else
-                        {
-                            //edge.Label = edgeLabel;
-                            edge.Dashes = !connected;
-                            edge.Color!.Color = color;
-                            edge.Width = isInitiator ? 6 : 2;
-                            edge.Arrows!.From!.Enabled = false;
-                            edge.Arrows!.To!.Enabled = isInitiator;
-                        }
-                        _netVis!.Edges.Update(edge);
-                        edgeIds.Add(edge.Id!);
-                    }
+                    var (wireNode, wireToTorrentEdge) = AddOrUpdateNodePeer(
+                        wire.OfferId,
+                        wire.RemotePeerId,
+                        wire.RemoteSignerKeyHex,
+                        wire.SignalerUrl,
+                        wire.InfoHash,
+                        wire.Initiator,
+                        wire.Connecting,
+                        wire.Connected,
+                        wire.SignalReceived
+                    );
+                    nodeIds.Add(wireNode.Id);
+                    edgeIds.Add(wireToTorrentEdge.Id!);
                 }
-                // RallyPoint peers (signalers and peers)
-                var allPeerIds = rallyPoint.GetAllKnownPeerIds();
-                var signalerIds = rallyPoint.GetAllKnownSignalerUrls();
-                allPeerIds.AddRange(signalerIds);
-                foreach (var peerId in allPeerIds)
+                foreach (var wire in wires)
                 {
-                    // peer node
-                    var defaultInfo = rallyPoint.GetConnectionInfoFirstOrDefault(peerId);
-                    var isThisPeer = peerId == rallyPoint.PeerId;
-                    if (isThisPeer) continue;
-                    var signerHex = isThisPeer ? DeviceIdentityService.PublicSigningKeyHex : (defaultInfo?.info.SignerKeyHex ?? peerId);
-                    var nodeId = $"{rallyPoint.InfoHash}.{peerId}";
-                    var node = _netVis!.Nodes!.Get(nodeId);
-                    var peerType = rallyPoint.GetPeerType(peerId);
-                    var nodeLabel = $"RallyPoint: {rallyPoint.InfoHashSource}\n{peerType}: {peerId}";
-                    var peerColor = GetColor(signerHex);
-                    if (node == null)
+                    foreach (var info in wire.ConnectionInfos)
                     {
-                        node = new VisNode
-                        {
-                            Id = nodeId,
-                            Label = nodeLabel,
-                            Shape = "circularImage",
-                            Image = isThisPeer ? rootNode.Image : GetImage(peerType),
-                            Font = onlineNodeFont,
-                            Color = new VisNodeColor
-                            {
-                                Border = peerColor,
-                                Background = "#222222",
-                            },
-                            Opacity = 1.0f,
-                            Tag = "wire",
-                            BorderWidth = 4,
-                            Title = "Double click to disconnect the peer",
-                            Physics = true,
-                        };
-                    }
-                    else
-                    {
-                        node.Label = nodeLabel;
-                        node.Font = onlineNodeFont;
-                        node.Color!.Border = peerColor;
-                        node.Opacity = 1.0f;
-                        node.BorderWidth = 4;
-                    }
-                    _netVis!.Nodes.Update(node);
-                    nodeIds.Add(node.Id);
-                    // wires
-                    var connInfoTuple = rallyPoint.GetConnectionInfoFirstOrDefault(peerId);
-                    if (connInfoTuple != null)
-                    {
-                        // wire
-                        var (sorucePeerId, connInfo) = connInfoTuple.Value;
-                        var sourceIsUs = sorucePeerId == RallyService.PeerId;
-                        var edgeToId = $"{rallyPoint.InfoHash}";
-                        var edgeId = $"{nodeId}>>{edgeToId}";
-                        var edge = _netVis!.Edges!.Get(edgeId);
-                        var connected = isThisPeer ? true : sourceIsUs ? connInfo.Connected : false;
-                        var connecting = isThisPeer ? false : sourceIsUs ? connInfo.Connecting : false;
-                        var isInitiator = isThisPeer ? true : sourceIsUs ? connInfo.Initiator : false;
-                        var color = "";
-                        if (connected)
-                        {
-                            color = "#ffffff";
-                        }
-                        else if (connecting)
-                        {
-                            color = "#ffff00";
-                        }
-                        else
-                        {
-                            color = "#550000";
-                        }
-                        if (edge == null)
-                        {
-                            edge = new VisEdge
-                            {
-                                Length = peerType == "signaler" ? 100 : 300,
-                                Id = edgeId,
-                                From = nodeId,
-                                To = edgeToId,
-                                Dashes = !connected,
-                                //Label = edgeLabel,
-                                Color = new VisEdgeColor
-                                {
-                                    Color = color,
-                                },
-                                Physics = true,
-                                // Background = new VisEdgeBackground
-                                // {
-                                //     Color = "#ff00ff",
-                                //     Enabled = true,
-                                //     Size = 10,
-                                // },
-                                Width = 2,
-                                Smooth = false,
-                                Arrows = new VisEdgeArrows
-                                {
-                                    From = new VisEdgeArrowOptions { Enabled = false, },
-                                    To = new VisEdgeArrowOptions { Enabled = isInitiator, },
-                                },
-                            };
-                        }
-                        else
-                        {
-                            //edge.Label = edgeLabel;
-                            edge.Dashes = !connected;
-                            edge.Color!.Color = color;
-                            edge.Width = isInitiator ? 6 : 2;
-                            edge.Arrows!.From!.Enabled = false;
-                            edge.Arrows!.To!.Enabled = isInitiator;
-                        }
-                        _netVis!.Edges.Update(edge);
-                        edgeIds.Add(edge.Id!);
+                        if (info.PeerId == RallyService.PeerId) continue;
+                        var isConnectedOrConnecting = wires.Any(o => o.RemotePeerId == info.PeerId);
+                        if (isConnectedOrConnecting) continue;
+                        var (wireNode, wireToTorrentEdge) = AddOrUpdateNodePeer(
+                            "",
+                            info.PeerId,
+                            info.SignerKeyHex,
+                            info.SignalerUrl,
+                            rallyPoint.InfoHash,
+                            false,
+                            false,
+                            false,
+                            false
+                        );
+                        nodeIds.Add(wireNode.Id);
+                        edgeIds.Add(wireToTorrentEdge.Id!);
                     }
                 }
             }
@@ -544,13 +270,8 @@
             _updating = false;
         }
     }
-
     string GetColor(string hex)
     {
-        if (hex == null || hex.Length % 2 == 1 || !Regex.IsMatch(hex, "^[a-fA-F0-9]$"))
-        {
-            hex = Convert.ToHexString(Encoding.UTF8.GetBytes(hex ?? ""));
-        }
         return $"#{GetSignerHexKeyFingerprint(hex, 3)}";
     }
     string GetSignerHexKeyFingerprint(string hex, int length = 8)
@@ -572,7 +293,7 @@
         }
         // Adjust the format string to your preferences. For example "{0:0.#}{1}" would
         // show a single decimal place, and no space.
-        return System.String.Format("{0:0.##} {1}", len, sizes[order]);
+        return String.Format("{0:0.##} {1}", len, sizes[order]);
     }
     (VisNode, VisEdge) AddOrUpdateNodePeer(string offerId, string remotePeerId, string remotePeerIdSignerHex, string signalerUrl, string infoHash, bool isInitiator, bool connecting, bool connected, bool signalReceived)
     {
@@ -704,7 +425,7 @@
         var edgeId = $"{nodeId}>>{edgeToId}";
         var tDone = true;// torrent.Done;
         var node = _netVis!.Nodes!.Get(nodeId);
-        var nodeLabel = $"RallyPoint: {torrent.InfoHashSource}";
+        var nodeLabel = $"{torrent.InfoHashSource}";
         if (node == null)
         {
             node = new VisNode
