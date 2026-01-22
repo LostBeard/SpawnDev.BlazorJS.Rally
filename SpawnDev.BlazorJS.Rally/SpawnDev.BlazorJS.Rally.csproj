@@ -30,9 +30,9 @@
 	<ItemGroup>
 		<PackageReference Include="SpawnDev.BlazorJS" Version="2.60.0" />
 		<PackageReference Include="SpawnDev.BlazorJS.WebWorkers" Version="2.37.0" />
-		<PackageReference Include="SpawnDev.BlazorJS.MessagePack" Version="1.8.0" />
-		<PackageReference Include="SpawnDev.BlazorJS.SimplePeer" Version="1.6.0" />
-		<PackageReference Include="SpawnDev.Identification" Version="1.0.0" />
+		<PackageReference Include="SpawnDev.BlazorJS.MessagePack" Version="1.9.0" />
+		<PackageReference Include="SpawnDev.BlazorJS.SimplePeer" Version="1.7.0" />
+		<PackageReference Include="SpawnDev.Identification" Version="1.1.0" />
 	</ItemGroup>
 
 	<ItemGroup>
